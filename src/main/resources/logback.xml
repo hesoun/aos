@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration scan="true" debug="true">
+
+    <property name="LOG_BASE" value="target/log"/>
+    <property name="LOG_PATTERN" value="%-26(%d{yyyy-MM-dd HH:mm:ss.SSS} [%t]) %-5p - %c{10} - %m%n%xEx{150}"/>
+    <property name="EVENT_LOG_PATTERN" value="%m%n"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %5t %-5p - %c{10} - %m%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="com.hesoun" level="debug">
+            <appender name="console" />
+    </logger>
+
+    <!--root logger    -->
+    <root level="info">
+        <appender-ref ref="console"/>
+    </root>
+</configuration>
