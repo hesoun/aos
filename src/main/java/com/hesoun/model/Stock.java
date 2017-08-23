@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -19,5 +20,6 @@ public class Stock {
     private String exchange;
     private String currencyCode;
     private LocalDate firstTradedDate;
+    private LocalDateTime inserted;
     private List<HistoricalDailyPrice> historicalDailyPrice;
 }

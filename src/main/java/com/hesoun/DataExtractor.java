@@ -11,9 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Main class which responsibility is to load all S&P stock names and for every one of them obtain data from given endpoint,
@@ -24,14 +25,27 @@ import java.util.List;
 public class DataExtractor {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataExtractor.class);
-    private static final String YAHOO_URL = "http://query2.finance.yahoo.com/v8/finance/chart/";
-    private final LocalDateTime from = LocalDateTime.of(1997, 1, 1, 0, 0);
-    private final LocalDateTime to = LocalDateTime.of(2017, 8, 15, 0, 0);
 
-    private StockDao dao = new StockDao();
+    private final Config config;
+    private final StockDao dao;
 
     public static void main(String... args) throws IOException {
-        new DataExtractor().run();
+        Properties props = new Properties();
+        props.load(DataExtractor.class.getResourceAsStream("/app.properties"));
+        Config config = new Config(props);
+        for(String arg : args) {
+            if(arg.equals("extract")) {
+                new DataExtractor(config).run();
+                break;
+            } else if (arg.equals("simulate")) {
+                break;
+            }
+        }
+    }
+
+    public DataExtractor(Config config) throws IOException {
+        this.config = config;
+        this.dao = new StockDao(config);
     }
 
     private void run() throws IOException {
@@ -54,9 +68,11 @@ public class DataExtractor {
     }
 
     private void getProcessAndSaveData(CloseableHttpClient httpClient, Pair<String, String> component) throws IOException {
+        LocalDate from = config.getFrom();
+        LocalDate to = config.getTo();
         LOG.info("Starting to get and process data for {} between {} and {}", component.getRight(), from, to);
-        String query = component.getLeft() + "?period1=" + from.atZone(ZoneId.systemDefault()).toInstant().getEpochSecond() + "&period2=" + to.atZone(ZoneId.systemDefault()).toInstant().getEpochSecond() + "&interval=1d";
-        HttpGet get = new HttpGet(YAHOO_URL + query);
+        String query = component.getLeft() + "?period1=" + from.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().getEpochSecond() + "&period2=" + to.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().getEpochSecond() + "&interval=1d";
+        HttpGet get = new HttpGet(config.getYahooUrl() + query);
 
         String json;
         //fetch stock and prices from yahoo
@@ -70,6 +86,5 @@ public class DataExtractor {
         Stock stock = JsonHelper.parseJsonAndCreateStock(json, component);
         //persist into DB
         dao.persist(stock);
-
     }
 }
