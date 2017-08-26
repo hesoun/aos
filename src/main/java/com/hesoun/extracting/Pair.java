@@ -1,4 +1,4 @@
-package com.hesoun;
+package com.hesoun.extracting;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

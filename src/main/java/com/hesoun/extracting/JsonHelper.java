@@ -1,7 +1,8 @@
-package com.hesoun;
+package com.hesoun.extracting;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hesoun.AosException;
 import com.hesoun.model.HistoricalDailyPrice;
 import com.hesoun.model.Stock;
 import org.slf4j.Logger;

@@ -1,4 +1,6 @@
-package com.hesoun;
+package com.hesoun.data;
+
+import com.hesoun.extracting.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;

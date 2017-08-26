@@ -1,5 +1,8 @@
-package com.hesoun;
+package com.hesoun.extracting;
 
+import com.hesoun.*;
+import com.hesoun.data.SP100Components;
+import com.hesoun.data.StockDao;
 import com.hesoun.model.Stock;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -29,26 +32,12 @@ public class DataExtractor {
     private final Config config;
     private final StockDao dao;
 
-    public static void main(String... args) throws IOException {
-        Properties props = new Properties();
-        props.load(DataExtractor.class.getResourceAsStream("/app.properties"));
-        Config config = new Config(props);
-        for(String arg : args) {
-            if(arg.equals("extract")) {
-                new DataExtractor(config).run();
-                break;
-            } else if (arg.equals("simulate")) {
-                break;
-            }
-        }
-    }
-
     public DataExtractor(Config config) throws IOException {
         this.config = config;
         this.dao = new StockDao(config);
     }
 
-    private void run() throws IOException {
+    public void extract() throws IOException {
         //fill S&P100 components
         List<Pair<String, String>> sp100Components = SP100Components.load();
 

@@ -1,5 +1,7 @@
-package com.hesoun;
+package com.hesoun.data;
 
+import com.hesoun.AosException;
+import com.hesoun.Config;
 import com.hesoun.model.HistoricalDailyPrice;
 import com.hesoun.model.Stock;
 import org.slf4j.Logger;
@@ -12,20 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dao for persting Stock data.
+ * Dao for persisting Stock data.
  *
  * @author Jakub Hesoun
  */
 public class StockDao {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
-    private static Connection conn;
-    private final Config config;
+    private Connection conn;
 
     public StockDao(Config config) {
-        this.config = config;
-        if (conn == null) {
-            conn = new Database().connect();
-        }
+        conn = Database.INSTANCE.connect(config);
     }
 
     public Stock persist(Stock stock) {
@@ -77,7 +75,7 @@ public class StockDao {
      */
     public List<Stock> getAllStock() {
         List<Stock> stocks = new ArrayList<>();
-        try (PreparedStatement ps = conn.prepareStatement("SELECT (id,symbol,name,exchange,currency_code,first_traded_date, inserted) FROM stock")) {
+        try (PreparedStatement ps = conn.prepareStatement("SELECT id,symbol,name,exchange,currency_code,first_traded_date, inserted FROM stock")) {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Stock stock = Stock.builder()
@@ -86,13 +84,13 @@ public class StockDao {
                         .name(rs.getString(3))
                         .exchange(rs.getString(4))
                         .currencyCode(rs.getString(5))
-                        .firstTradedDate(LocalDate.from(rs.getDate(5).toLocalDate()))
-                        .inserted(rs.getTimestamp(6).toLocalDateTime())
+                        .firstTradedDate(LocalDate.from(rs.getDate(6).toLocalDate()))
+                        .inserted(rs.getTimestamp(7).toLocalDateTime())
                         .build();
                 stocks.add(stock);
             }
         } catch (SQLException e) {
-            throw new AosException("Cannot load all the stocks from DB");
+            throw new AosException("Cannot load all the stocks from DB",e);
         }
 
         return stocks;
@@ -135,28 +133,4 @@ public class StockDao {
         return price;
     }
 
-    private class Database {
-        public Connection connect() {
-            try {
-                Class.forName("org.postgresql.Driver");
-            } catch (ClassNotFoundException e) {
-                LOG.error("Driver class has not been found");
-                throw new AosException(e);
-            }
-
-            Connection conn;
-            try {
-                conn = DriverManager.getConnection(config.getDatabaseUrl(), config.getGetDatabaseUser(), config.getDatabasePassword());
-            } catch (SQLException e) {
-                LOG.error("Unable to obtain connection to the database");
-                throw new AosException(e);
-            }
-
-            if (conn == null) {
-                LOG.error("Unable to obtain connection to the database");
-                throw new AosException("Unable to obtain connection to the database");
-            }
-            return conn;
-        }
-    }
 }
