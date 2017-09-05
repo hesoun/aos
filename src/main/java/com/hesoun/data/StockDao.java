@@ -3,6 +3,7 @@ package com.hesoun.data;
 import com.hesoun.AosException;
 import com.hesoun.Config;
 import com.hesoun.model.HistoricalDailyPrice;
+import com.hesoun.model.Position;
 import com.hesoun.model.Stock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,9 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Dao for persisting Stock data.
@@ -20,17 +23,17 @@ import java.util.List;
  */
 public class StockDao {
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
-    private Connection conn;
+    private final Connection conn;
 
     public StockDao(Config config) {
         conn = Database.INSTANCE.connect(config);
     }
 
     public Stock persist(Stock stock) {
-        LOG.info("Starting to persist {} with {} days of price data", stock.getName(), stock.getHistoricalDailyPrice().size());
+        LOG.info("Starting to persist {} with {} days of price data", stock.getName(), stock.getHistoricalDailyPrices().size());
         persistStockFlat(stock);
         int i = 0;
-        for (HistoricalDailyPrice price : stock.getHistoricalDailyPrice()) {
+        for (HistoricalDailyPrice price : stock.getHistoricalDailyPrices()) {
             price.setStockId(stock.getId());
             persistHistoricalDailyPriceFlat(price);
             if (++i % 1000 == 0) {
@@ -74,9 +77,9 @@ public class StockDao {
      * Returns a shallow stock, no entites are eagerly loaded.
      */
     public List<Stock> getAllStock() {
-        List<Stock> stocks = new ArrayList<>();
         try (PreparedStatement ps = conn.prepareStatement("SELECT id,symbol,name,exchange,currency_code,first_traded_date, inserted FROM stock")) {
             ResultSet rs = ps.executeQuery();
+            List<Stock> stocks = new ArrayList<>();
             while (rs.next()) {
                 Stock stock = Stock.builder()
                         .id(rs.getLong(1))
@@ -89,11 +92,56 @@ public class StockDao {
                         .build();
                 stocks.add(stock);
             }
+            return stocks;
         } catch (SQLException e) {
-            throw new AosException("Cannot load all the stocks from DB",e);
+            throw new AosException("Cannot load all the stocks from DB", e);
         }
+    }
 
-        return stocks;
+    /**
+     * Retrieve a Map of stock to stock with openPosition field populated. A Map is used because Set do not contain
+     * get method.
+     */
+    public Map<Stock, Stock> getStockWithOpenPosition() {
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT * " +
+                        "FROM stock AS s " +
+                        "LEFT JOIN position AS p ON s.id = p.stock_id " +
+                        "WHERE status = CAST(? AS STATUS_TYPE) " +
+                        "ORDER BY s.id,p.slice")) {
+            ps.setString(1, "O");
+            ResultSet rs = ps.executeQuery();
+            Map<Stock, Stock> stocksMap = new HashMap<>();
+            while (rs.next()) {
+                Stock stock = Stock.builder()
+                        .id(rs.getLong(1))
+                        .symbol(rs.getString(2))
+                        .name(rs.getString(3))
+                        .exchange(rs.getString(4))
+                        .currencyCode(rs.getString(5))
+                        .firstTradedDate(LocalDate.from(rs.getDate(6).toLocalDate()))
+                        .inserted(rs.getTimestamp(7).toLocalDateTime())
+                        .build();
+                if (stocksMap.containsKey(stock)) {
+                    stock = stocksMap.get(stock);
+                }
+
+                List<Position> positionList = stock.getOpenPositions();
+                Position position = Position.builder()
+                        .id(rs.getLong(1))
+                        .buyPrice(rs.getBigDecimal(2))
+                        .sellPrice(rs.getBigDecimal(3))
+                        .status(Position.Status.valueOf(rs.getString(4)))
+                        .buyDate(rs.getDate(5).toLocalDate())
+                        .slice(Position.Slice.getSliceFromPercentage(rs.getInt(6)))
+                        .basketUUID(rs.getString(7))
+                        .build();
+                positionList.add(position);
+            }
+            return stocksMap;
+        } catch (SQLException e) {
+            throw new AosException("Cannot load open positions from DB", e);
+        }
     }
 
     private HistoricalDailyPrice persistHistoricalDailyPriceFlat(HistoricalDailyPrice price) {

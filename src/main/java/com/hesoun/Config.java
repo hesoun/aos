@@ -16,13 +16,16 @@ public class Config {
     private final String databaseUrl;
     private final String getDatabaseUser;
     private final String databasePassword;
+    private final int initialBalance;
 
     public Config(Properties properties) {
         yahooUrl = properties.getProperty("yahoo.url");
+
         from = LocalDate.parse(properties.getProperty("date.from"));
         to = LocalDate.parse(properties.getProperty("date.to"));
         databaseUrl = properties.getProperty("database.url");
         getDatabaseUser = properties.getProperty("database.user");
         databasePassword = properties.getProperty("database.password");
+        initialBalance = Integer.parseInt(properties.getProperty("initial.balance"));
     }
 }

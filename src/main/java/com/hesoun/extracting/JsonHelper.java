@@ -85,7 +85,7 @@ public class JsonHelper {
             );
         }
 
-        stock.setHistoricalDailyPrice(dailyPrices);
+        stock.setHistoricalDailyPrices(dailyPrices);
         stock.setName(component.getRight());
         LOG.info("JSON parsed successfully");
         return stock;

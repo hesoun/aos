@@ -21,7 +21,7 @@ public class AosBot {
                 new DataExtractor(config).extract();
                 break;
             } else if (arg.equals("simulate")) {
-//                new Simulator(config).simulate();
+                new Simulator(config).simulate();
                 break;
             }
         }
