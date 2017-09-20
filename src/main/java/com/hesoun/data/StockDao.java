@@ -132,7 +132,7 @@ public class StockDao {
                         .buyPrice(rs.getBigDecimal(2))
                         .sellPrice(rs.getBigDecimal(3))
                         .status(Position.Status.valueOf(rs.getString(4)))
-                        .buyDate(rs.getDate(5).toLocalDate())
+                        .buyDate(rs.getTimestamp(5).toLocalDateTime())
                         .slice(Position.Slice.getSliceFromPercentage(rs.getInt(6)))
                         .basketUUID(rs.getString(7))
                         .build();

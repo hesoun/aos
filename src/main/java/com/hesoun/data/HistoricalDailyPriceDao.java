@@ -25,7 +25,7 @@ public class HistoricalDailyPriceDao {
      * Gets a list of {@link HistoricalDailyPrice}s for given stock. The list contains {@param days} number of prices
      * from days before {@param date} which are ordered by this date descending.
      */
-    public List<HistoricalDailyPrice> getLastPricesForStock(long stockId, int days, LocalDate date) {
+    public List<HistoricalDailyPrice> getLastPricesForStock(long stockId, int days, LocalDate lastDate) {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT id,date,open,high,low,close,volume,adjclose,unadjclose,stock_id " +
                         "FROM historical_eod_price " +
@@ -33,7 +33,7 @@ public class HistoricalDailyPriceDao {
                         "ORDER BY date DESC " +
                         "LIMIT ?")) {
             ps.setLong(1, stockId);
-            ps.setDate(2, Date.valueOf(date));
+            ps.setDate(2, Date.valueOf(lastDate));
             ps.setInt(3, days);
 
             ResultSet rs = ps.executeQuery();
@@ -55,7 +55,7 @@ public class HistoricalDailyPriceDao {
             return result;
         } catch (SQLException e) {
             throw new AosException(
-                    MessageFormat.format("Cannot get {0} last days of prices going back from {1} for stock with id={2}", days, date, stockId));
+                    MessageFormat.format("Cannot get {0} last days of prices going back from {1} for stock with id={2}", days, lastDate, stockId));
         }
     }
 

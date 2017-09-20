@@ -33,8 +33,8 @@ CREATE TABLE position (
   buy_price   NUMERIC     NOT NULL,
   sell_price  NUMERIC     NOT NULL,
   status      STATUS_TYPE NOT NULL, --(O)pen or (C)lose,
-  buy_date    DATE        NOT NULL,
-  sell_date   DATE        NOT NULL,
+  buy_date    TIMESTAMP   NOT NULL,
+  sell_date   TIMESTAMP   NOT NULL,
   slice       SLICE_TYPE  NOT NULL,
   basket_uuid UUID        NOT NULL,
   stock_id    BIGINT      NOT NULL REFERENCES stock

@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -23,8 +23,8 @@ public class Position {
     private BigDecimal buyPrice;
     private BigDecimal sellPrice;
     private Status status;
-    private LocalDate buyDate;
-    private LocalDate sellDate;
+    private LocalDateTime buyDate;
+    private LocalDateTime sellDate;
     private Slice slice;
     private String basketUUID;
     private Stock stock;
@@ -62,6 +62,10 @@ public class Position {
 
         public int getAmount() {
             return amount;
+        }
+
+        public int getPositionPercentage() {
+            return positionPercentage;
         }
 
         public static Slice getSliceFromPercentage(int positionPercentage) {
