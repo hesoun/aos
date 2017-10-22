@@ -3,6 +3,7 @@ package com.hesoun.model;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import static java.text.MessageFormat.format;
  */
 @Builder
 @Data
+@ToString(exclude = "openPositions")
 @EqualsAndHashCode(of = {"id", "symbol", "exchange"})
 public class Stock {
     private long id;

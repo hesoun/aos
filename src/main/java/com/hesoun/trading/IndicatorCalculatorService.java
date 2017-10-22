@@ -30,17 +30,18 @@ public class IndicatorCalculatorService {
         return new Indicators(sma200, rsi2, sma5);
     }
 
-    public BigDecimal calculateSimpleMovingAverage(int periodLength) {
+    private BigDecimal calculateSimpleMovingAverage(int periodLength) {
         if (periodLength > priceList.size()) {
             throw new IllegalArgumentException("Cannot calculate SMA for " + periodLength + " days when there is only " + priceList.size() + " prices");
         }
         return priceList.stream()
+                .limit(periodLength)
                 .map(HistoricalDailyPrice::getAdjustedClose)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(BigDecimal.valueOf(periodLength), BigDecimal.ROUND_HALF_UP);
     }
 
-    public BigDecimal calculateRSI(int periodLength) {
+    private BigDecimal calculateRSI(int periodLength) {
         BigDecimal gains = BigDecimal.ZERO;
         BigDecimal loses = BigDecimal.ZERO;
         BigDecimal lastPrice = priceList.get(periodLength).getAdjustedClose();

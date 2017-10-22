@@ -13,7 +13,7 @@
     </appender>
 
 
-    <logger name="com.hesoun" level="debug">
+    <logger name="com.hesoun" level="info">
             <appender name="console" />
     </logger>
 

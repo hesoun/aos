@@ -1,13 +1,16 @@
 package com.hesoun.model;
 
+import com.hesoun.AosException;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 import static com.hesoun.model.Account.INITIAL_BALANCE;
 
@@ -23,9 +26,10 @@ public class Position {
     private BigDecimal buyPrice;
     private BigDecimal sellPrice;
     private Status status;
-    private LocalDateTime buyDate;
-    private LocalDateTime sellDate;
+    private LocalDate buyDate;
+    private LocalDate sellDate;
     private Slice slice;
+    private int shares;
     private String basketUUID;
     private Stock stock;
 
@@ -40,6 +44,16 @@ public class Position {
 
         public String getSymbol() {
             return symbol;
+        }
+
+        public static Status getStatusFromSymbol(String symbol) {
+            Objects.requireNonNull(symbol, "symbol cannot be null");
+            for (Status s : Status.values()) {
+                if (symbol.equals(s.getSymbol())) {
+                    return s;
+                }
+            }
+            throw new AosException(MessageFormat.format("Provided symbol {0} is not valid for Status", symbol));
         }
     }
 
@@ -64,8 +78,8 @@ public class Position {
             return amount;
         }
 
-        public int getPositionPercentage() {
-            return positionPercentage;
+        public String getPositionPercentageAsString() {
+            return String.valueOf(positionPercentage);
         }
 
         public static Slice getSliceFromPercentage(int positionPercentage) {

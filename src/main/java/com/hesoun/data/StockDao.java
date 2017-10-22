@@ -29,6 +29,9 @@ public class StockDao {
         conn = Database.INSTANCE.connect(config);
     }
 
+    /**
+     * Insert stock entity into the database along with all the historical daily prices.
+     */
     public Stock persist(Stock stock) {
         LOG.info("Starting to persist {} with {} days of price data", stock.getName(), stock.getHistoricalDailyPrices().size());
         persistStockFlat(stock);
@@ -104,10 +107,11 @@ public class StockDao {
      */
     public Map<Stock, Stock> getStockWithOpenPosition() {
         try (PreparedStatement ps = conn.prepareStatement(
-                "SELECT * " +
+                "SELECT s.id,s.symbol,s.name,s.exchange,s.currency_code,s.first_traded_date,s.inserted," +
+                        "p.id,p.buy_price,p.status,p.buy_date,p.slice,p.shares,p.basket_uuid " +
                         "FROM stock AS s " +
                         "LEFT JOIN position AS p ON s.id = p.stock_id " +
-                        "WHERE status = CAST(? AS STATUS_TYPE) " +
+                        "WHERE status = ?::STATUS_TYPE " +
                         "ORDER BY s.id,p.slice")) {
             ps.setString(1, "O");
             ResultSet rs = ps.executeQuery();
@@ -119,8 +123,9 @@ public class StockDao {
                         .name(rs.getString(3))
                         .exchange(rs.getString(4))
                         .currencyCode(rs.getString(5))
-                        .firstTradedDate(LocalDate.from(rs.getDate(6).toLocalDate()))
+                        .firstTradedDate(rs.getDate(6).toLocalDate())
                         .inserted(rs.getTimestamp(7).toLocalDateTime())
+                        .openPositions(new ArrayList<>())
                         .build();
                 if (stocksMap.containsKey(stock)) {
                     stock = stocksMap.get(stock);
@@ -128,15 +133,17 @@ public class StockDao {
 
                 List<Position> positionList = stock.getOpenPositions();
                 Position position = Position.builder()
-                        .id(rs.getLong(1))
-                        .buyPrice(rs.getBigDecimal(2))
-                        .sellPrice(rs.getBigDecimal(3))
-                        .status(Position.Status.valueOf(rs.getString(4)))
-                        .buyDate(rs.getTimestamp(5).toLocalDateTime())
-                        .slice(Position.Slice.getSliceFromPercentage(rs.getInt(6)))
-                        .basketUUID(rs.getString(7))
+                        .id(rs.getLong(8))
+                        .buyPrice(rs.getBigDecimal(9))
+                        .status(Position.Status.getStatusFromSymbol(rs.getString(10)))
+                        .buyDate(rs.getDate(11).toLocalDate())
+                        .slice(Position.Slice.getSliceFromPercentage(rs.getInt(12)))
+                        .shares(rs.getInt(13))
+                        .basketUUID(rs.getString(14))
+                        .stock(stock)
                         .build();
                 positionList.add(position);
+                stocksMap.put(stock, stock);
             }
             return stocksMap;
         } catch (SQLException e) {

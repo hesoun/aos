@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS historical_eod_price;
 DROP TABLE IF EXISTS stock;
+DROP TABLE IF EXISTS position;
 
 CREATE TABLE stock (
   id                BIGSERIAL PRIMARY KEY,
@@ -31,12 +32,13 @@ CREATE TYPE SLICE_TYPE AS ENUM ('10', '20', '30', '40');
 CREATE TABLE position (
   id          BIGSERIAL PRIMARY KEY,
   buy_price   NUMERIC     NOT NULL,
-  sell_price  NUMERIC     NOT NULL,
+  sell_price  NUMERIC,
   status      STATUS_TYPE NOT NULL, --(O)pen or (C)lose,
-  buy_date    TIMESTAMP   NOT NULL,
-  sell_date   TIMESTAMP   NOT NULL,
+  buy_date    DATE   NOT NULL,
+  sell_date   DATE,
   slice       SLICE_TYPE  NOT NULL,
-  basket_uuid UUID        NOT NULL,
+  shares      INTEGER     NOT NULL,
+  basket_uuid UUID,
   stock_id    BIGINT      NOT NULL REFERENCES stock
 )
 
